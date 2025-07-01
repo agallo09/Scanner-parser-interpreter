@@ -1,6 +1,7 @@
 #include "Scanner.h"
 #include "Token.h"
 #include <iostream>
+#include <fstream>
 
 using namespace std;
 
