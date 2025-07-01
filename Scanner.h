@@ -9,13 +9,15 @@ class Scanner {
         string input;
         int line;
      public:
-      Scanner(const string& input) : input(input) { }
-      
-    Token scanToken() {
+      Scanner(const string& input) : input(input), line (1) { }
+
+   Token scanToken() {
     removeWhiteSpace();
+    if (input.empty()) {
+    return Token(END, "", line);}
     TokenType type = UNDEFINED;
     string value = "";
-    int line = 0;  // You might want to track line properly later
+    int tokenLine = line; 
 
     if (input.empty()) {
         type = END;
@@ -32,7 +34,7 @@ class Scanner {
         input = input.substr(1);
     }
     else if (input.at(0) == '?') {
-        type = Q_MAR;
+        type = Q_MARK;
         value = "?";
         input = input.substr(1);
     }
@@ -153,17 +155,16 @@ class Scanner {
         input = input.substr(1);
     }
 
-    return Token(type, value, line);
+    return Token(type, value, tokenLine);
   }
 
 
-
-
-
-  void removeWhiteSpace(){
-    while (isspace(input.at(0))){
-            input = input.substr(1);
+  void removeWhiteSpace() {
+    while (!input.empty() && isspace(input.at(0))) {
+        if (input.at(0) == '\n') {
+            line++;
+        }
+        input = input.substr(1);
     }
-    
-  }
+}
 };

@@ -4,7 +4,7 @@
 using namespace std;
 
 enum TokenType{
-    COMMA,PERIOD, Q_MAR,LEFT_PAREM, RIGHT_PAREN, COLON, COLON_DASH, MULTIPLY, ADD,  SCHEMES, FACTS, RULES, QUERIES, ID, STRING, COMMENT, UNDEFINED, END
+    COMMA,PERIOD, Q_MARK,LEFT_PAREM, RIGHT_PAREN, COLON, COLON_DASH, MULTIPLY, ADD,  SCHEMES, FACTS, RULES, QUERIES, ID, STRING, COMMENT, UNDEFINED, END
     };
 
 class Token{
@@ -21,11 +21,11 @@ class Token{
             case PERIOD:
                 return "PERIOD";
                 break;
-            case Q_MAR:
-                return "Q_MAR";
+            case Q_MARK:
+                return "Q_MARK";
                 break;
             case LEFT_PAREM:
-                return "LEFT_PAREM";
+                return "LEFT_PAREN";
                 break;
             case RIGHT_PAREN:
                 return "RIGHT_PAREN";
@@ -60,6 +60,9 @@ class Token{
             case UNDEFINED:
                 return "UNDEFINED";
                 break;
+            case END:
+                return "END";
+                break;
             default:
                 break;
         }
@@ -73,4 +76,8 @@ class Token{
     out << "(" << typeName(type) << "," << "\"" << value << "\"" << "," << line << ")";
     return out.str();
   }
+  TokenType getType() const {
+    return type;
+}
+
 };
