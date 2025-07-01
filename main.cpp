@@ -17,7 +17,6 @@ int main(int argc, char*argv[]) {
         t = s.scanToken();
     }
 
-    // Print END token too
     cout << t.toString() << endl;
     totalTokens++;
     cout << "Total tokens = " << totalTokens << endl;
