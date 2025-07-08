@@ -117,39 +117,26 @@ class Scanner {
             type = UNDEFINED;
         }
     } else if (input.at(0) == '#') {
-        value += '#';
-        if (input.size() > 1 && input.at(1) == '|') {
-            value += '|';
-            input = input.substr(2);
-            bool terminated = false;
-
-            while (!input.empty()) {
-                char c = input.at(0);
-                value += c;
-                input = input.substr(1);
-                if (c == '\n') line++;
-
-                if (c == '|' && !input.empty() && input.at(0) == '#') {
-                    value += '#';
-                    input = input.substr(1);
-                    terminated = true;
-                    break;
-                }
-            }
-
-            if (terminated) {
-                type = COMMENT;
-            } else {
-                type = UNDEFINED;
-            }
-        } else {
+        //code
+    if (input.size() > 1 && input.at(1) == '|') {
+        // Multiline comment
+        input = input.substr(2);
+        while (!input.empty()) {
+            char c = input.at(0);
             input = input.substr(1);
-            while (!input.empty() && input.at(0) != '\n') {
-                value += input.at(0);
+            if (c == '\n') line++;
+            if (c == '|' && !input.empty() && input.at(0) == '#') {
                 input = input.substr(1);
+                break;
             }
-            type = COMMENT;
         }
+    } else {
+        input = input.substr(1);
+        while (!input.empty() && input.at(0) != '\n') {
+            input = input.substr(1);
+        }
+    }
+    return scanToken();
     }else {
         type = UNDEFINED;
         value = input.substr(0, 1);

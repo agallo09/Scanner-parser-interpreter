@@ -79,5 +79,8 @@ class Token{
   TokenType getType() const {
     return type;
 }
+string getValue() const {
+    return value;
+}
 
 };
