@@ -1,24 +1,24 @@
 #include "Scanner.h"
 #include "Token.h"
+#include "Parser.h"
 #include <iostream>
 #include <fstream>
+#include <vector>
+
 
 using namespace std;
 
 int main(int argc, char*argv[]) {
-  ifstream in(argv[1]);
-    string input((istreambuf_iterator<char>(in)), istreambuf_iterator<char>());
-    Scanner s(input);
-    int totalTokens = 0;
-    Token t = s.scanToken();
-      while (t.getType() != END) {
-        cout << t.toString() << endl;
-        totalTokens ++;
-        t = s.scanToken();
-    }
+  
+    vector<Token> tokens = {
+    Token(ID,"Ned",2),
+    //Token(LEFT_PAREN,"(",2),
+    Token(ID,"Ted",2),
+    Token(COMMA,",",2),
+    Token(ID,"Zed",2),
+    Token(RIGHT_PAREN,")",2),
+  };
 
-    cout << t.toString() << endl;
-    totalTokens++;
-    cout << "Total tokens = " << totalTokens << endl;
-    return 0;
+  Parser p = Parser(tokens);
+  p.scheme();
 }

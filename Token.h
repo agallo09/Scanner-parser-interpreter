@@ -4,7 +4,7 @@
 using namespace std;
 
 enum TokenType{
-    COMMA,PERIOD, Q_MARK,LEFT_PAREM, RIGHT_PAREN, COLON, COLON_DASH, MULTIPLY, ADD,  SCHEMES, FACTS, RULES, QUERIES, ID, STRING, COMMENT, UNDEFINED, END
+    COMMA,PERIOD, Q_MARK,LEFT_PAREN, RIGHT_PAREN, COLON, COLON_DASH, MULTIPLY, ADD,  SCHEMES, FACTS, RULES, QUERIES, ID, STRING, COMMENT, UNDEFINED, END
     };
 
 class Token{
@@ -24,7 +24,7 @@ class Token{
             case Q_MARK:
                 return "Q_MARK";
                 break;
-            case LEFT_PAREM:
+            case LEFT_PAREN:
                 return "LEFT_PAREN";
                 break;
             case RIGHT_PAREN:

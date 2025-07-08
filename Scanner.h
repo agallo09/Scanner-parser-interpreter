@@ -2,6 +2,7 @@
 #include <string>
 #include<sstream>
 #include "Token.h"
+#include <vector>
 using namespace std;
 
 class Scanner {
@@ -39,7 +40,7 @@ class Scanner {
         input = input.substr(1);
     }
     else if (input.at(0) == '(') {
-        type = LEFT_PAREM;
+        type = LEFT_PAREN;
         value = "(";
         input = input.substr(1);
     }
