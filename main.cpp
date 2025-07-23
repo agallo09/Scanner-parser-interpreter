@@ -7,6 +7,8 @@
 #include "DatalogProgram.h"
 #include "Scheme.h"
 #include "Tuple.h"
+#include "Relation.h"
+
 
 
 
@@ -18,6 +20,8 @@ int main(int argc, char*argv[]) {
 
   Scheme scheme(names);
 
+  Relation relation("student", scheme);
+
   vector<string> values[] = {
     {"'42'", "'Ann'", "'CS'"},
     {"'32'", "'Bob'", "'CS'"},
@@ -28,6 +32,15 @@ int main(int argc, char*argv[]) {
   for (auto& value : values) {
     Tuple tuple(value);
     cout << tuple.toString(scheme) << endl;
+    relation.addTuple(tuple);
   }
+
+  cout << "relation:" << endl;
+  cout << relation.toString();
+
+  Relation result = relation.select(2, "'CS'");
+
+  cout << "select Major='CS' result:" << endl;
+  cout << result.toString();
 
 }

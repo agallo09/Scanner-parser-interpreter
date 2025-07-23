@@ -10,7 +10,7 @@
 #include "Scheme.h"
 
 
-class Tuple : public vector<string> {
+class Tuple  {
 
 private:
 
@@ -18,7 +18,7 @@ private:
 
 public:
 
-  Tuple(vector<string> values) : values(values) { }
+  Tuple(const vector<string> values) : values(values) { }
 
   unsigned size() const {
     return values.size();

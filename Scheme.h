@@ -8,7 +8,7 @@
 #include "Rule.h"
 #include "DatalogProgram.h"
 
-class Scheme : public vector<string> {
+class Scheme {
 
 private:
 
@@ -16,7 +16,7 @@ private:
 
 public:
 
-  Scheme(vector<string> names) : names(names) { }
+  Scheme(const vector<string> names) : names(names) { }
 
   unsigned size() const {
     return names.size();
