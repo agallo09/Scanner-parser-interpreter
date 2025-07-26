@@ -27,6 +27,11 @@ class Relation {
   void addTuple(const Tuple& tuple) {
     tuples.insert(tuple);
   }
+  bool empty() const { return tuples.empty(); }
+  
+  int size() const { return tuples.size(); }
+
+  
   string toString() const {
         stringstream out;
         for (const Tuple& tuple : tuples) {
@@ -42,19 +47,24 @@ class Relation {
             }
         }
         return result;
-    }  
+    }
+    Relation select(int index1, int index2) const {
+    Relation result(name, scheme);
+    for (const Tuple& tuple : tuples) {
+        if (tuple.at(index1) == tuple.at(index2)) {
+            result.addTuple(tuple);
+        }
+    }
+    return result;
+}
   Relation project(const vector<int>& columns) const {
-    // Create new Scheme by selecting only the columns specified
     vector<string> newSchemeNames;
     for (int index : columns) {
         newSchemeNames.push_back(scheme.at(index));
     }
     Scheme newScheme(newSchemeNames);
+     Relation result(name, newScheme);
 
-    // Create new Relation with the new scheme
-    Relation result(name, newScheme);
-
-    // For each tuple, create a projected tuple and add it
     for (const Tuple& tuple : tuples) {
         vector<string> projectedValues;
         for (int index : columns) {
@@ -66,19 +76,20 @@ class Relation {
 
     return result;
 }
-Relation rename(const vector<string>& newNames) const {
-    // Create a new Scheme with the new column names
-    Scheme newScheme(newNames);
+    Relation rename(const vector<string>& newNames) const {
+        Scheme newScheme(newNames);
 
-    // Create a new Relation with the same name and tuples, but new scheme
-    Relation result(name, newScheme);
+        Relation result(name, newScheme);
 
-    // Add all existing tuples to the new relation
-    for (const Tuple& tuple : tuples) {
-        result.addTuple(tuple);
+        for (const Tuple& tuple : tuples) {
+            result.addTuple(tuple);
+        }
+
+        return result;
     }
-
-    return result;
+    const std::string& getName() const {
+    return name;
 }
+    
 
 };

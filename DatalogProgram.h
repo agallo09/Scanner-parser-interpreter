@@ -12,7 +12,7 @@ private:
     std::vector<Predicate> facts;
     std::vector<Rule> rules;
      std::vector<Predicate> queries;
-    std::set<std::string> domain;  // string from the fact category
+    std::set<std::string> domain; 
 
 public:
     void addScheme(const Predicate& scheme) {
@@ -36,7 +36,7 @@ public:
         queries.push_back(query);
     }
 
-    const std::vector<Predicate>& getSchemes() const {
+     const std::vector<Predicate>& getSchemes() const {
         return schemes;
     }
 
@@ -53,11 +53,11 @@ public:
     }
 
     const std::set<std::string>& getDomain() const {
-        return domain;
+          return domain;
     }
 
     std::string toString() const {
-        std::stringstream out;
+         std::stringstream out;
 
         out << "Schemes(" << schemes.size() << "):" << std::endl;
         for (const auto& s : schemes) {
@@ -66,7 +66,7 @@ public:
 
         out << "Facts(" << facts.size() << "):" << std::endl;
         for (const auto& f : facts) {
-            out << "  " << f.toString() << "." << std::endl;  // Facts end with a period
+            out << "  " << f.toString() << "." << std::endl;  
         }
 
         out << "Rules(" << rules.size() << "):" << std::endl;
@@ -76,7 +76,7 @@ public:
 
         out << "Queries(" << queries.size() << "):" << std::endl;
         for (const auto& q : queries) {
-            out << "  " << q.toString() << "?" << std::endl;  // Queries end with a question mark
+            out << "  " << q.toString() << "?" << std::endl;  
         }
 
         out << "Domain(" << domain.size() << "):" << std::endl;

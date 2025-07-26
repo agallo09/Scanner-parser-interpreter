@@ -1,46 +1,50 @@
 #include "Scanner.h"
 #include "Token.h"
 #include "Parser.h"
+#include "DatalogProgram.h"
+#include "Interpreter.h"
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <vector>
-#include "DatalogProgram.h"
-#include "Scheme.h"
-#include "Tuple.h"
-#include "Relation.h"
-
-
-
-
 using namespace std;
 
-int main(int argc, char*argv[]) {
-  
-    vector<string> names = { "ID", "Name", "Major" };
+int main(int argc, char* argv[]) {
+    if (argc < 2) {
+        cerr << "Usage: " << argv[0] << " <inputfile>" << endl;
+        return 1;
+    }
 
-  Scheme scheme(names);
+    ifstream inputFile(argv[1]);
+    if (!inputFile) {
+        cerr << "Could not open file: " << argv[1] << endl;
+        return 1;
+    }
 
-  Relation relation("student", scheme);
+    stringstream buffer;
+    buffer << inputFile.rdbuf();
+    string inputText = buffer.str();
 
-  vector<string> values[] = {
-    {"'42'", "'Ann'", "'CS'"},
-    {"'32'", "'Bob'", "'CS'"},
-    {"'64'", "'Ned'", "'EE'"},
-    {"'16'", "'Jim'", "'EE'"},
-  };
+    Scanner scanner(inputText);
+    vector<Token> tokens;
 
-  for (auto& value : values) {
-    Tuple tuple(value);
-    cout << tuple.toString(scheme) << endl;
-    relation.addTuple(tuple);
-  }
+    while (true) {
+        Token token = scanner.scanToken();
+        tokens.push_back(token);
+        if (token.getType() == END) break;
+    }
 
-  cout << "relation:" << endl;
-  cout << relation.toString();
+    Parser parser(tokens);
 
-  Relation result = relation.select(2, "'CS'");
+    try {
+        DatalogProgram datalogProgram = parser.datalogProgram();
+        Interpreter interpreter(datalogProgram);
+        interpreter.evaluate();  
+    } catch (const Token& errorToken) {
+        cout << "Failure!" << endl;
+        cout << "  " << errorToken.toString() << endl;
+        return 1;
+    }
 
-  cout << "select Major='CS' result:" << endl;
-  cout << result.toString();
-
+    return 0;
 }
