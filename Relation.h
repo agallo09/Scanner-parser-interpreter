@@ -9,6 +9,8 @@
 #include "DatalogProgram.h"
 #include "Scheme.h"
 #include "Tuple.h"
+#include <unordered_map>
+#include <utility> 
 
 
 class Relation {
@@ -89,7 +91,60 @@ class Relation {
     }
     const std::string& getName() const {
     return name;
-}
+}   
+   static bool joinable(const Scheme& leftScheme, const Scheme& rightScheme,
+                     const Tuple& leftTuple, const Tuple& rightTuple) {
+    unordered_map<string, pair<int,int>> sharedAttributes;
+
+    // shared attributes
+    for (int i = 0; i < (int)leftScheme.size(); ++i) {
+        const string& leftName = leftScheme.at(i);
+        const string& leftValue = leftTuple.at(i);
+        cout << "left name: " << leftName << " value: " << leftValue << endl;
+        for (int j = 0; j < (int)rightScheme.size(); ++j) {
+            const string& leftName = rightScheme.at(j);
+            const string& leftValue = rightTuple.at(j);
+            cout << "right name: " << leftName << " value: " << leftValue << endl;
+            if (leftScheme.at(i) == rightScheme.at(j)) {
+                sharedAttributes[leftScheme.at(i)] = {i, j};
+            }
+        }
+    }
+    // check if empty
+    if (sharedAttributes.empty()) {
+        return false; 
+    }
+    // Compare values at shared attribute indexes
+    for (auto& pair : sharedAttributes) {
+        const string& attr = pair.first;
+        const std::pair<int, int>& indexes = pair.second;
+        int leftIdx = indexes.first;
+        int rightIdx = indexes.second;
+        if (leftTuple.at(leftIdx) != rightTuple.at(rightIdx)) {
+            return false; 
+        }
+    }
+
+    return true; 
+    }
+
+    Relation join(const Relation& right) {
+        const Relation& left = *this;
+
+    // Loop over the left tuples
+    for (const Tuple& leftTuple : left.tuples) {
+        cout << "left tuple: " << leftTuple.toString(left.scheme) << endl;
+
+        // Loop over the right tuples
+        for (const Tuple& rightTuple : right.tuples) {
+            cout << "right tuple: " << rightTuple.toString(right.scheme) << endl;
+
+            // This is just the debug version. Actual joining logic will come later.
+        }
+    }
+
+    return right;
+    }
     
 
 };
