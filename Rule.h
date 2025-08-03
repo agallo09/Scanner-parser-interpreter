@@ -16,11 +16,11 @@ public:
         bodyPredicates.push_back(pred);
     }
 
-    const Predicate& getHeadPredicate() const {
+    const Predicate& getHead() const {
         return headPredicate;
     }
 
-    const std::vector<Predicate>& getBodyPredicates() const {
+    const std::vector<Predicate>& getBody() const {
         return bodyPredicates;
     }
 

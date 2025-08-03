@@ -25,6 +25,12 @@ public:
     return names.at(index);
   }
   
-  // TODO: add more delegation functions as needed
+  // get names for project 4
+  const vector<string>& getNames() const {
+    return names;
+}
+vector<string> toVector() const {
+    return names;
+}
 
 };

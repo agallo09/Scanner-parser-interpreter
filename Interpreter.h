@@ -14,8 +14,10 @@ public:
         
     void evaluate() {
         evaluateSchemes();
-        evaluateFacts();   
+        evaluateFacts(); 
+        evaluateRules();  
         evaluateQueries();
+        Relation evaluatePredicate(const Predicate& pred);
     } 
 
     void evaluateSchemes() {
@@ -32,6 +34,34 @@ public:
             database.addRelation(relation);  
     }
     }
+    Relation evaluatePredicate(const Predicate& pred) {
+    Relation rel = database.getRelation(pred.getName());
+    std::map<std::string, int> seen;
+    std::vector<int> proj;
+    std::vector<std::string> rename;
+
+    const auto& params = pred.getParameters();
+
+    for (size_t i = 0; i < params.size(); ++i) {
+        const std::string& val = params[i].getValue();
+        if (params[i].getIsString()) {
+            rel = rel.select(i, val);
+        } else {
+            if (seen.count(val)) {
+                rel = rel.select(seen[val], i);
+            } else {
+                seen[val] = i;
+                proj.push_back(i);
+                rename.push_back(val);
+            }
+        }
+    }
+
+    rel = rel.project(proj);
+    rel = rel.rename(rename);
+    return rel;
+}
+
     void evaluateFacts() {
     for (const Predicate& fact : program.getFacts()) {
         std::string name = fact.getName();  
@@ -89,6 +119,80 @@ public:
                 }
             }
         }
+
+
     }
+    }
+
+    //evaluate rules, new
+    void evaluateRules() {
+    std::cout << "Rule Evaluation" << std::endl;
+
+    int passes = 0;
+    bool changed;
+
+    do {
+        changed = false;
+        passes++;
+
+        for (const Rule& rule : program.getRules()) {
+            std::cout << rule.toString() << std::endl;
+
+            std::vector<Relation> predicateResults;
+
+            for (const Predicate& pred : rule.getBody()) {
+                predicateResults.push_back(evaluatePredicate(pred));
+            }
+
+            // Join all predicate results
+            Relation combined = predicateResults[0];
+            for (size_t i = 1; i < predicateResults.size(); ++i) {
+                combined = combined.join(predicateResults[i]);
+            }
+
+            // Project attributes in head predicate order
+            std::vector<std::string> headNames;
+            for (const Parameter& param : rule.getHead().getParameters()) {
+                headNames.push_back(param.getValue());
+            }
+
+            std::vector<int> indices;
+            for (const std::string& name : headNames) {
+                for (size_t i = 0; i < combined.getScheme().size(); ++i) {
+                    if (combined.getScheme().at(i) == name) {
+                        indices.push_back(i);
+                        break;
+                    }
+                }
+            }
+
+            Relation projected = combined.project(indices);
+
+            // Rename to match head scheme
+            Relation renamed = projected.rename(database.getRelation(rule.getHead().getName()).getScheme().getNames());
+
+            // Union with existing relation in the database
+            Relation& target = database.getRelation(rule.getHead().getName());
+            int before = target.size();
+            target.unionWith(renamed);
+            int after = target.size();
+
+            // Output new tuples
+            for (const Tuple& t : renamed.getTuples()) {
+                if (!target.contains(t)) continue; // Only new ones
+                std::cout << "  " << t.toString(target.getScheme()) << std::endl;
+            }
+
+            if (after > before) {
+                changed = true;
+            }
+        }
+    } while (changed);
+
+    std::cout << std::endl;
+    std::cout << "Schemes populated after " << passes << " passes through the Rules." << std::endl;
+    std::cout << std::endl;
 }
+
+
 };

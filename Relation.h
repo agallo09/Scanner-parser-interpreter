@@ -127,24 +127,80 @@ class Relation {
 
     return true; 
     }
-
+    //join 
     Relation join(const Relation& right) {
-        const Relation& left = *this;
+    const Relation& left = *this;
+    Scheme newScheme = combineSchemes(left.scheme, right.scheme);
+    Relation result("joinResult", newScheme);
 
-    // Loop over the left tuples
     for (const Tuple& leftTuple : left.tuples) {
-        cout << "left tuple: " << leftTuple.toString(left.scheme) << endl;
-
-        // Loop over the right tuples
         for (const Tuple& rightTuple : right.tuples) {
-            cout << "right tuple: " << rightTuple.toString(right.scheme) << endl;
-
-            // This is just the debug version. Actual joining logic will come later.
+            if (joinable(left.scheme, right.scheme, leftTuple, rightTuple)) {
+                Tuple newTuple = combineTuples(leftTuple, left.scheme, rightTuple, right.scheme);
+                result.addTuple(newTuple);
+            }
         }
     }
 
-    return right;
+    return result;
     }
+
+
+    //union
+    bool unionWith(const Relation& other) {
+    bool addedNewTuple = false;
+
+    for (const Tuple& t : other.tuples) {
+        if (tuples.insert(t).second) { // insert returns pair<iterator, bool>
+            std::cout << "  " << t.toString(scheme) << std::endl;
+            addedNewTuple = true;
+        }
+    }
+
+    return addedNewTuple;
+}
+    Scheme combineSchemes(const Scheme& s1, const Scheme& s2) {
+    vector<string> combined = s1.toVector();
+
+    for (const string& attr : s2.toVector()) {
+        if (find(s1.toVector().begin(), s1.toVector().end(), attr) == s1.toVector().end()) {
+            combined.push_back(attr);
+        }
+    }
+
+    return Scheme(combined);
+}
+
+Tuple combineTuples(const Tuple& t1, const Scheme& s1, const Tuple& t2, const Scheme& s2) {
+    vector<string> combined = t1.toVector();
+
+    for (int i = 0; i < (int)s2.size(); ++i) {
+        const string& attr = s2.at(i);
+        bool isDuplicate = false;
+
+        for (int j = 0; j < (int)s1.size(); ++j) {
+            if (s1.at(j) == attr) {
+                isDuplicate = true;
+                break;
+            }
+        }
+
+        if (!isDuplicate) {
+            combined.push_back(t2.at(i));
+        }
+    }
+
+    return Tuple(combined);
+}
     
+const Scheme& getScheme() const {
+    return scheme;
+}
+const set<Tuple>& getTuples() const {
+    return tuples;
+}
+bool contains(const Tuple& t) const {
+    return tuples.count(t) > 0;
+}
 
 };

@@ -41,4 +41,14 @@ public:
         }
         return out.str();
     }
+
+  //get value for project 4
+
+  const vector<string>& getValues() const {
+    return values;
+}
+vector<string> toVector() const {
+    return values;
+}
+
 };
