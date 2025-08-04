@@ -34,6 +34,8 @@ public:
             database.addRelation(relation);  
     }
     }
+    
+    //evaluate Predicate
     Relation evaluatePredicate(const Predicate& pred) {
     Relation rel = database.getRelation(pred.getName());
     std::map<std::string, int> seen;
@@ -45,23 +47,27 @@ public:
     for (size_t i = 0; i < params.size(); ++i) {
         const std::string& val = params[i].getValue();
         if (params[i].getIsString()) {
-            rel = rel.select(i, val);
+            rel = rel.select(i, val);  // Constant string → selection
         } else {
             if (seen.count(val)) {
-                rel = rel.select(seen[val], i);
+                rel = rel.select(seen[val], i);  // Same variable → equality selection
             } else {
                 seen[val] = i;
-                proj.push_back(i);
-                rename.push_back(val);
+                proj.push_back(i);       // New variable → remember index
+                rename.push_back(val);   // ...and its name
             }
         }
     }
 
-    rel = rel.project(proj);
-    rel = rel.rename(rename);
+    // Only project/rename if there are variables
+    if (!proj.empty()) {
+        rel = rel.project(proj);
+        rel = rel.rename(rename);
+    }
+
     return rel;
 }
-
+    //evaluate facts
     void evaluateFacts() {
     for (const Predicate& fact : program.getFacts()) {
         std::string name = fact.getName();  
@@ -75,6 +81,8 @@ public:
         database.getRelation(name).addTuple(tuple);
     }
     }
+    
+    //evaluate queties
     void evaluateQueries() {
     for (const Predicate& query : program.getQueries()) {
         std::cout << query.toString() << "?";
@@ -158,13 +166,24 @@ public:
 
             std::vector<int> indices;
             for (const std::string& name : headNames) {
+                bool found = false;
                 for (size_t i = 0; i < combined.getScheme().size(); ++i) {
                     if (combined.getScheme().at(i) == name) {
                         indices.push_back(i);
+                        found = true;
                         break;
                     }
                 }
-            }
+                if (!found) {
+                    std::cerr << "Error: Attribute '" << name << "' not found in joined relation scheme.\n";
+                    std::cerr << "Joined scheme: ";
+                    for (const auto& attr : combined.getScheme().toVector()) {
+                        std::cerr << attr << " ";
+                        }
+                        std::cerr << std::endl;
+                        throw std::runtime_error("Projection index build failed");
+                    }
+                }
 
             Relation projected = combined.project(indices);
 

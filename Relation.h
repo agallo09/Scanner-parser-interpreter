@@ -21,27 +21,29 @@ class Relation {
   Scheme scheme;
   set<Tuple> tuples;
 
- public:
-
-  Relation(const string& name, const Scheme& scheme)
+    public:
+    //constructor
+    Relation(const string& name, const Scheme& scheme)
     : name(name), scheme(scheme) { }
+    
+    //basic methods
+    void addTuple(const Tuple& tuple) {
+        tuples.insert(tuple);
+    }
+    bool empty() const { return tuples.empty(); }
+    int size() const { return tuples.size(); }
 
-  void addTuple(const Tuple& tuple) {
-    tuples.insert(tuple);
-  }
-  bool empty() const { return tuples.empty(); }
-  
-  int size() const { return tuples.size(); }
-
-  
-  string toString() const {
+    //to string
+    string toString() const {
         stringstream out;
         for (const Tuple& tuple : tuples) {
             out << tuple.toString(scheme) << endl;
         }
         return out.str();
     }
-  Relation select(int index, const string& value) const {
+    
+    // select
+    Relation select(int index, const string& value) const {
         Relation result(name, scheme);
         for (const Tuple& tuple : tuples) {
             if (tuple.at(index) == value) {
@@ -50,6 +52,8 @@ class Relation {
         }
         return result;
     }
+    
+    // select 2
     Relation select(int index1, int index2) const {
     Relation result(name, scheme);
     for (const Tuple& tuple : tuples) {
@@ -59,7 +63,9 @@ class Relation {
     }
     return result;
 }
-  Relation project(const vector<int>& columns) const {
+    
+    // project
+    Relation project(const vector<int>& columns) const {
     vector<string> newSchemeNames;
     for (int index : columns) {
         newSchemeNames.push_back(scheme.at(index));
@@ -78,6 +84,8 @@ class Relation {
 
     return result;
 }
+    
+    // rename    
     Relation rename(const vector<string>& newNames) const {
         Scheme newScheme(newNames);
 
@@ -89,11 +97,14 @@ class Relation {
 
         return result;
     }
+    
+    //get anme helping methjod
     const std::string& getName() const {
     return name;
 }   
-   static bool joinable(const Scheme& leftScheme, const Scheme& rightScheme,
-                     const Tuple& leftTuple, const Tuple& rightTuple) {
+    
+    //joinable
+    static bool joinable(const Scheme& leftScheme, const Scheme& rightScheme, const Tuple& leftTuple, const Tuple& rightTuple) {
     unordered_map<string, pair<int,int>> sharedAttributes;
 
     // shared attributes
@@ -127,6 +138,7 @@ class Relation {
 
     return true; 
     }
+
     //join 
     Relation join(const Relation& right) {
     const Relation& left = *this;
@@ -145,7 +157,6 @@ class Relation {
     return result;
     }
 
-
     //union
     bool unionWith(const Relation& other) {
     bool addedNewTuple = false;
@@ -159,6 +170,8 @@ class Relation {
 
     return addedNewTuple;
 }
+    
+    //combine schemes method
     Scheme combineSchemes(const Scheme& s1, const Scheme& s2) {
     vector<string> combined = s1.toVector();
 
@@ -171,7 +184,8 @@ class Relation {
     return Scheme(combined);
 }
 
-Tuple combineTuples(const Tuple& t1, const Scheme& s1, const Tuple& t2, const Scheme& s2) {
+    //combine tupls
+    Tuple combineTuples(const Tuple& t1, const Scheme& s1, const Tuple& t2, const Scheme& s2) {
     vector<string> combined = t1.toVector();
 
     for (int i = 0; i < (int)s2.size(); ++i) {
@@ -193,14 +207,17 @@ Tuple combineTuples(const Tuple& t1, const Scheme& s1, const Tuple& t2, const Sc
     return Tuple(combined);
 }
     
-const Scheme& getScheme() const {
-    return scheme;
-}
-const set<Tuple>& getTuples() const {
-    return tuples;
-}
-bool contains(const Tuple& t) const {
-    return tuples.count(t) > 0;
-}
+    //3 helping methods
+    const Scheme& getScheme() const {
+        return scheme;
+    }
+
+    const set<Tuple>& getTuples() const {
+        return tuples;
+    }
+
+    bool contains(const Tuple& t) const {
+        return tuples.count(t) > 0;
+    }
 
 };
