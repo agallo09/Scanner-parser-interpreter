@@ -29,7 +29,7 @@ public:
   const vector<string>& getNames() const {
     return names;
 }
-vector<string> toVector() const {
+std::vector<std::string> toVector() const {
     return names;
 }
 

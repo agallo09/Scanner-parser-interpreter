@@ -189,7 +189,7 @@ public:
             
             
             Relation& target = database.getRelation(rule.getHead().getName());
-            int before = target.size();
+            //int before = target.size();
             // Print new tuples only
             std::vector<Tuple> newTuplesToPrint;
             for (const Tuple& t : renamed.getTuples()) {
@@ -200,7 +200,7 @@ public:
 
             // Perform union once
             bool added = target.unionWith(renamed);
-            int after = target.size();
+            //int after = target.size();
 
             if (added) {
                 changed = true;

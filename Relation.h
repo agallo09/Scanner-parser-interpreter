@@ -11,6 +11,7 @@
 #include "Tuple.h"
 #include <unordered_map>
 #include <utility> 
+#include <algorithm> 
 
 
 class Relation {
@@ -109,13 +110,13 @@ class Relation {
 
     // shared attributes
     for (int i = 0; i < (int)leftScheme.size(); ++i) {
-        const string& leftName = leftScheme.at(i);
-        const string& leftValue = leftTuple.at(i);
+        //const string& leftName = leftScheme.at(i);
+        //const string& leftValue = leftTuple.at(i);
         // cout << "left name: " << leftName << " value: " << leftValue << endl;
         for (int j = 0; j < (int)rightScheme.size(); ++j) {
-            const string& leftName = rightScheme.at(j);
-            const string& leftValue = rightTuple.at(j);
-            // cout << "right name: " << leftName << " value: " << leftValue << endl;
+            //const string& leftName = rightScheme.at(j);
+            //const string& leftValue = rightTuple.at(j);
+            // cout << "right name: " << leftNam e << " value: " << leftValue << endl;
             if (leftScheme.at(i) == rightScheme.at(j)) {
             sharedAttributes[leftScheme.at(i)] = std::make_pair(i, j);
             }
@@ -162,7 +163,7 @@ class Relation {
     bool addedNewTuple = false;
 
     for (const Tuple& t : other.tuples) {
-        if (tuples.insert(t).second) { // insert returns pair<iterator, bool>
+        if (tuples.insert(t).second) { 
             //std::cout << "  " << t.toString(scheme) << std::endl;
             addedNewTuple = true;
         }
@@ -188,7 +189,7 @@ class Relation {
 
     //combine tupls
     Tuple combineTuples(const Tuple& t1, const Scheme& s1, const Tuple& t2, const Scheme& s2) {
-    vector<string> combined = t1.toVector();
+    std::vector<std::string> combined = t1.toVector();
 
     for (int i = 0; i < (int)s2.size(); ++i) {
         const string& attr = s2.at(i);
