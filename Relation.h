@@ -105,25 +105,25 @@ class Relation {
     
     //joinable
     static bool joinable(const Scheme& leftScheme, const Scheme& rightScheme, const Tuple& leftTuple, const Tuple& rightTuple) {
-    unordered_map<string, pair<int,int>> sharedAttributes;
+    unordered_map<string, pair< int,int> > sharedAttributes;
 
     // shared attributes
     for (int i = 0; i < (int)leftScheme.size(); ++i) {
         const string& leftName = leftScheme.at(i);
         const string& leftValue = leftTuple.at(i);
-        cout << "left name: " << leftName << " value: " << leftValue << endl;
+        // cout << "left name: " << leftName << " value: " << leftValue << endl;
         for (int j = 0; j < (int)rightScheme.size(); ++j) {
             const string& leftName = rightScheme.at(j);
             const string& leftValue = rightTuple.at(j);
-            cout << "right name: " << leftName << " value: " << leftValue << endl;
+            // cout << "right name: " << leftName << " value: " << leftValue << endl;
             if (leftScheme.at(i) == rightScheme.at(j)) {
-                sharedAttributes[leftScheme.at(i)] = {i, j};
+            sharedAttributes[leftScheme.at(i)] = std::make_pair(i, j);
             }
         }
     }
     // check if empty
     if (sharedAttributes.empty()) {
-        return false; 
+        return true; 
     }
     // Compare values at shared attribute indexes
     for (auto& pair : sharedAttributes) {
@@ -163,7 +163,7 @@ class Relation {
 
     for (const Tuple& t : other.tuples) {
         if (tuples.insert(t).second) { // insert returns pair<iterator, bool>
-            std::cout << "  " << t.toString(scheme) << std::endl;
+            //std::cout << "  " << t.toString(scheme) << std::endl;
             addedNewTuple = true;
         }
     }
@@ -173,10 +173,12 @@ class Relation {
     
     //combine schemes method
     Scheme combineSchemes(const Scheme& s1, const Scheme& s2) {
-    vector<string> combined = s1.toVector();
+    std::vector<std::string> left = s1.toVector();
+    std::vector<std::string> right = s2.toVector();
+    std::vector<std::string> combined = left;
 
-    for (const string& attr : s2.toVector()) {
-        if (find(s1.toVector().begin(), s1.toVector().end(), attr) == s1.toVector().end()) {
+    for (const std::string& attr : right) {
+        if (std::find(left.begin(), left.end(), attr) == left.end()) {
             combined.push_back(attr);
         }
     }

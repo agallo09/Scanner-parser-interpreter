@@ -1,6 +1,7 @@
 #pragma once
 #include "DatalogProgram.h"
 #include "Database.h"
+using namespace std;
 
 class Interpreter {
 private:
@@ -81,10 +82,12 @@ public:
         database.getRelation(name).addTuple(tuple);
     }
     }
-    
+
     //evaluate queties
     void evaluateQueries() {
-    for (const Predicate& query : program.getQueries()) {
+        std::cout << "Query Evaluation" << std::endl; 
+
+        for (const Predicate& query : program.getQueries()) {
         std::cout << query.toString() << "?";
 
         Relation relation = database.getRelation(query.getName());
@@ -144,15 +147,14 @@ public:
         passes++;
 
         for (const Rule& rule : program.getRules()) {
+            // Print the rule once per pass
             std::cout << rule.toString() << std::endl;
 
             std::vector<Relation> predicateResults;
-
             for (const Predicate& pred : rule.getBody()) {
                 predicateResults.push_back(evaluatePredicate(pred));
             }
 
-            // Join all predicate results
             Relation combined = predicateResults[0];
             for (size_t i = 1; i < predicateResults.size(); ++i) {
                 combined = combined.join(predicateResults[i]);
@@ -176,36 +178,39 @@ public:
                 }
                 if (!found) {
                     std::cerr << "Error: Attribute '" << name << "' not found in joined relation scheme.\n";
-                    std::cerr << "Joined scheme: ";
-                    for (const auto& attr : combined.getScheme().toVector()) {
-                        std::cerr << attr << " ";
-                        }
-                        std::cerr << std::endl;
-                        throw std::runtime_error("Projection index build failed");
-                    }
+                    throw std::runtime_error("Projection index build failed");
                 }
+            }
 
             Relation projected = combined.project(indices);
+            
 
-            // Rename to match head scheme
             Relation renamed = projected.rename(database.getRelation(rule.getHead().getName()).getScheme().getNames());
-
-            // Union with existing relation in the database
+            
+            
             Relation& target = database.getRelation(rule.getHead().getName());
             int before = target.size();
-            target.unionWith(renamed);
+            // Print new tuples only
+            std::vector<Tuple> newTuplesToPrint;
+            for (const Tuple& t : renamed.getTuples()) {
+                if (!target.contains(t)) {
+                    newTuplesToPrint.push_back(t);
+                }
+            }
+
+            // Perform union once
+            bool added = target.unionWith(renamed);
             int after = target.size();
 
-            // Output new tuples
-            for (const Tuple& t : renamed.getTuples()) {
-                if (!target.contains(t)) continue; // Only new ones
-                std::cout << "  " << t.toString(target.getScheme()) << std::endl;
-            }
-
-            if (after > before) {
+            if (added) {
                 changed = true;
+                // Print only the new tuples inserted
+                for (const Tuple& t : newTuplesToPrint) {
+                    std::cout << "  " << t.toString(target.getScheme()) << std::endl;
+                }
             }
         }
+
     } while (changed);
 
     std::cout << std::endl;
