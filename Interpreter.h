@@ -1,6 +1,8 @@
 #pragma once
 #include "DatalogProgram.h"
 #include "Database.h"
+#include "Graph.h"
+#include "Node.h"
 using namespace std;
 
 class Interpreter {
@@ -21,6 +23,7 @@ public:
         Relation evaluatePredicate(const Predicate& pred);
     } 
 
+    //evaluate Schemes
     void evaluateSchemes() {
         for (const Predicate& scheme : program.getSchemes()) {
             std::string name = scheme.getName(); 
@@ -68,6 +71,7 @@ public:
 
     return rel;
 }
+    
     //evaluate facts
     void evaluateFacts() {
     for (const Predicate& fact : program.getFacts()) {
@@ -218,5 +222,30 @@ public:
     std::cout << std::endl;
 }
 
+    //makegraph
+    static Graph makeGraph(const std::vector<Rule>& rules) {
+    Graph graph(rules.size());
+
+    for (size_t fromID = 0; fromID < rules.size(); ++fromID) {
+      const Rule& fromRule = rules[fromID];
+      std::cout << "from rule R" << fromID << ": " << fromRule.toString() << std::endl;
+
+      for (const Predicate& bodyPred : fromRule.getBody()) {
+        std::cout << "from body predicate: " << bodyPred.toString() << std::endl;
+
+        for (size_t toID = 0; toID < rules.size(); ++toID) {
+          const Rule& toRule = rules[toID];
+          std::cout << "to rule R" << toID << ": " << toRule.toString() << std::endl;
+
+          if (bodyPred.getName() == toRule.getHead().getName()) {
+            std::cout << "dependency found: (R" << fromID << ",R" << toID << ")" << std::endl;
+            graph.addEdge(fromID, toID);
+          }
+        }
+      }
+    }
+
+    return graph;
+  }
 
 };

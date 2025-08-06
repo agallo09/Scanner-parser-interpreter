@@ -33,7 +33,6 @@ public:
                 out << ",";
             }
         }
-        out << ".";
         return out.str();
     }
 };
