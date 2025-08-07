@@ -3,249 +3,256 @@
 #include "Database.h"
 #include "Graph.h"
 #include "Node.h"
+#include <iostream>
+#include <map>
+#include <vector>
 using namespace std;
 
 class Interpreter {
 private:
     DatalogProgram program;
     Database database;
+    Graph dependencyGraph;
 
 public:
     Interpreter(const DatalogProgram& program)
-        : program(program) { }
+        : program(program), dependencyGraph(makeGraph(program.getRules())) { }
 
-        
     void evaluate() {
         evaluateSchemes();
-        evaluateFacts(); 
-        evaluateRules();  
-        evaluateQueries();
-        Relation evaluatePredicate(const Predicate& pred);
-    } 
+        evaluateFacts();
 
-    //evaluate Schemes
+        // Get SCCs from the graph
+        vector<vector<int>> sccs = dependencyGraph.computeSCCs();
+
+        // Evaluate rules per SCC
+        evaluateRulesPerSCC(sccs, dependencyGraph);
+
+        evaluateQueries();
+    }
+
     void evaluateSchemes() {
         for (const Predicate& scheme : program.getSchemes()) {
-            std::string name = scheme.getName(); 
-             std::vector<std::string> attributes;
-
-            for (const Parameter& param : scheme.getParameters()) {
-                  attributes.push_back(param.getValue()); 
-            }
+            vector<string> attributes;
+            for (const Parameter& param : scheme.getParameters())
+                attributes.push_back(param.getValue());
 
             Scheme schemeObj(attributes);
-            Relation relation(name, schemeObj);
-            database.addRelation(relation);  
-    }
-    }
-    
-    //evaluate Predicate
-    Relation evaluatePredicate(const Predicate& pred) {
-    Relation rel = database.getRelation(pred.getName());
-    std::map<std::string, int> seen;
-    std::vector<int> proj;
-    std::vector<std::string> rename;
-
-    const auto& params = pred.getParameters();
-
-    for (size_t i = 0; i < params.size(); ++i) {
-        const std::string& val = params[i].getValue();
-        if (params[i].getIsString()) {
-            rel = rel.select(i, val);  // Constant string → selection
-        } else {
-            if (seen.count(val)) {
-                rel = rel.select(seen[val], i);  // Same variable → equality selection
-            } else {
-                seen[val] = i;
-                proj.push_back(i);       // New variable → remember index
-                rename.push_back(val);   // ...and its name
-            }
+            Relation relation(scheme.getName(), schemeObj);
+            database.addRelation(relation);
         }
     }
 
-    // Only project/rename if there are variables
-    if (!proj.empty()) {
-        rel = rel.project(proj);
-        rel = rel.rename(rename);
-    }
-
-    return rel;
-}
-    
-    //evaluate facts
     void evaluateFacts() {
-    for (const Predicate& fact : program.getFacts()) {
-        std::string name = fact.getName();  
-        std::vector<std::string> values;
+        for (const Predicate& fact : program.getFacts()) {
+            vector<string> values;
+            for (const Parameter& param : fact.getParameters())
+                values.push_back(param.getValue());
 
-        for (const Parameter& param : fact.getParameters()) {
-            values.push_back(param.getValue());
+            Tuple tuple(values);
+            database.getRelation(fact.getName()).addTuple(tuple);
         }
-
-        Tuple tuple(values);
-        database.getRelation(name).addTuple(tuple);
-    }
     }
 
-    //evaluate queties
-    void evaluateQueries() {
-        std::cout << "Query Evaluation" << std::endl; 
-
-        for (const Predicate& query : program.getQueries()) {
-        std::cout << query.toString() << "?";
-
-        Relation relation = database.getRelation(query.getName());
-        std::map<std::string, int> variableMap;
-        std::vector<std::string> newNames;
-        std::vector<int> projectIndices;
-
-        const std::vector<Parameter>& params = query.getParameters();
+    Relation evaluatePredicate(const Predicate& pred) {
+        Relation rel = database.getRelation(pred.getName());
+        map<string, int> seen;
+        vector<int> proj;
+        vector<string> rename;
+        const auto& params = pred.getParameters();
 
         for (size_t i = 0; i < params.size(); ++i) {
-            const std::string& value = params[i].getValue();
-
+            string val = params[i].getValue();
             if (params[i].getIsString()) {
-                relation = relation.select(i, value);
+                rel = rel.select(i, val);
             } else {
-                if (variableMap.count(value)) {
-                    relation = relation.select(variableMap[value], i);
+                if (seen.count(val))
+                    rel = rel.select(seen[val], i);
+                else {
+                    seen[val] = i;
+                    proj.push_back(i);
+                    rename.push_back(val);
+                }
+            }
+        }
+        if (!proj.empty()) {
+            rel = rel.project(proj);
+            rel = rel.rename(rename);
+        }
+        return rel;
+    }
+
+    void evaluateQueries() {
+        cout<<endl;
+        cout << "Query Evaluation" << endl;
+        for (const Predicate& query : program.getQueries()) {
+            cout << query.toString() << "?";
+            Relation relation = database.getRelation(query.getName());
+
+            map<string, int> varMap;
+            vector<string> newNames;
+            vector<int> projectIndices;
+
+            const auto& params = query.getParameters();
+            for (size_t i = 0; i < params.size(); ++i) {
+                string val = params[i].getValue();
+                if (params[i].getIsString()) {
+                    relation = relation.select(i, val);
                 } else {
-                    variableMap[value] = i;
-                    projectIndices.push_back(i);
-                    newNames.push_back(value);
-                }
-            }
-        }
-
-        relation = relation.project(projectIndices);
-        relation = relation.rename(newNames);
-
-        if (relation.empty()) {
-            std::cout << " No" << std::endl;
-        } else {
-            std::cout << " Yes(" << relation.size() << ")" << std::endl;
-
-            std::string output = relation.toString();
-            std::istringstream stream(output);
-            std::string line;
-            while (std::getline(stream, line)) {
-                if (!line.empty()) {
-                    std::cout << "  " << line << std::endl;
-                }
-            }
-        }
-
-
-    }
-    }
-
-    //evaluate rules, new
-    void evaluateRules() {
-    std::cout << "Rule Evaluation" << std::endl;
-
-    int passes = 0;
-    bool changed;
-
-    do {
-        changed = false;
-        passes++;
-
-        for (const Rule& rule : program.getRules()) {
-            // Print the rule once per pass
-            std::cout << rule.toString() << std::endl;
-
-            std::vector<Relation> predicateResults;
-            for (const Predicate& pred : rule.getBody()) {
-                predicateResults.push_back(evaluatePredicate(pred));
-            }
-
-            Relation combined = predicateResults[0];
-            for (size_t i = 1; i < predicateResults.size(); ++i) {
-                combined = combined.join(predicateResults[i]);
-            }
-
-            // Project attributes in head predicate order
-            std::vector<std::string> headNames;
-            for (const Parameter& param : rule.getHead().getParameters()) {
-                headNames.push_back(param.getValue());
-            }
-
-            std::vector<int> indices;
-            for (const std::string& name : headNames) {
-                bool found = false;
-                for (size_t i = 0; i < combined.getScheme().size(); ++i) {
-                    if (combined.getScheme().at(i) == name) {
-                        indices.push_back(i);
-                        found = true;
-                        break;
+                    if (varMap.count(val))
+                        relation = relation.select(varMap[val], i);
+                    else {
+                        varMap[val] = i;
+                        projectIndices.push_back(i);
+                        newNames.push_back(val);
                     }
                 }
-                if (!found) {
-                    std::cerr << "Error: Attribute '" << name << "' not found in joined relation scheme.\n";
-                    throw std::runtime_error("Projection index build failed");
-                }
             }
 
-            Relation projected = combined.project(indices);
-            
+            relation = relation.project(projectIndices);
+            relation = relation.rename(newNames);
 
-            Relation renamed = projected.rename(database.getRelation(rule.getHead().getName()).getScheme().getNames());
-            
-            
-            Relation& target = database.getRelation(rule.getHead().getName());
-            //int before = target.size();
-            // Print new tuples only
-            std::vector<Tuple> newTuplesToPrint;
-            for (const Tuple& t : renamed.getTuples()) {
-                if (!target.contains(t)) {
-                    newTuplesToPrint.push_back(t);
-                }
-            }
-
-            // Perform union once
-            bool added = target.unionWith(renamed);
-            //int after = target.size();
-
-            if (added) {
-                changed = true;
-                // Print only the new tuples inserted
-                for (const Tuple& t : newTuplesToPrint) {
-                    std::cout << "  " << t.toString(target.getScheme()) << std::endl;
+            if (relation.empty()) {
+                cout << " No" << endl;
+            } else {
+                cout << " Yes(" << relation.size() << ")" << endl;
+                istringstream iss(relation.toString());
+                string line;
+                while (getline(iss, line)) {
+                    if (!line.empty())
+                        cout << "  " << line << endl;
                 }
             }
         }
-
-    } while (changed);
-
-    std::cout << std::endl;
-    std::cout << "Schemes populated after " << passes << " passes through the Rules." << std::endl;
-    std::cout << std::endl;
-}
-
-    //makegraph
-    static Graph makeGraph(const std::vector<Rule>& rules) {
-    Graph graph(rules.size());
-
-    for (size_t fromID = 0; fromID < rules.size(); ++fromID) {
-      const Rule& fromRule = rules[fromID];
-      std::cout << "from rule R" << fromID << ": " << fromRule.toString() << std::endl;
-
-      for (const Predicate& bodyPred : fromRule.getBody()) {
-        std::cout << "from body predicate: " << bodyPred.toString() << std::endl;
-
-        for (size_t toID = 0; toID < rules.size(); ++toID) {
-          const Rule& toRule = rules[toID];
-          std::cout << "to rule R" << toID << ": " << toRule.toString() << std::endl;
-
-          if (bodyPred.getName() == toRule.getHead().getName()) {
-            std::cout << "dependency found: (R" << fromID << ",R" << toID << ")" << std::endl;
-            graph.addEdge(fromID, toID);
-          }
-        }
-      }
     }
 
-    return graph;
-  }
+    void evaluateRulesPerSCC(const vector<vector<int>>& sccs, const Graph& graph) {
+    cout << "Dependency Graph" << endl;
 
+    vector<int> allNodes;
+    for (const auto& scc : sccs)
+        for (int r : scc)
+            allNodes.push_back(r);
+    sort(allNodes.begin(), allNodes.end());
+
+    for (int r : allNodes) {
+        cout << "R" << r << ":";
+        const auto& adj = graph.getNodes().at(r).getAdjacent();
+        size_t count = 0;
+        for (int nbr : adj) {
+            cout << "R" << nbr;
+            if (++count < adj.size()) cout << ",";
+        }
+        cout << "\n";
+    }
+
+    cout << endl;
+    cout << "Rule Evaluation" << endl;
+
+        for (auto scc : sccs) {
+        sort(scc.begin(), scc.end());
+        cout << "SCC: ";
+        
+        for (size_t i = 0; i < scc.size(); ++i) {
+            cout << "R" << scc[i];
+            if (i != scc.size() - 1) cout << ",";
+        }
+        cout << endl;
+
+
+        bool isTrivial = (scc.size() == 1);
+        bool selfLoop = false;
+
+        if (isTrivial) {
+            int r = scc[0];
+            for (const Predicate& bodyPred : program.getRules()[r].getBody()) {
+                if (bodyPred.getName() == program.getRules()[r].getHead().getName()) {
+                    selfLoop = true;
+                    break;
+                }
+            }
+        }
+
+        int passes = 0;
+        bool changed;
+        do {
+            changed = false;
+            passes++;
+
+            for (int r : scc) {
+                const Rule& rule = program.getRules()[r];
+                cout << rule.toString() << "." << endl;
+
+                vector<Relation> predResults;
+                for (const Predicate& pred : rule.getBody())
+                    predResults.push_back(evaluatePredicate(pred));
+
+                Relation combined = predResults[0];
+                for (size_t i = 1; i < predResults.size(); ++i)
+                    combined = combined.join(predResults[i]);
+
+                vector<string> headNames;
+                for (const Parameter& param : rule.getHead().getParameters())
+                    headNames.push_back(param.getValue());
+
+                vector<int> indices;
+                for (const string& name : headNames) {
+                    bool found = false;
+                    for (size_t i = 0; i < combined.getScheme().size(); ++i) {
+                        if (combined.getScheme().at(i) == name) {
+                            indices.push_back(i);
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found)
+                        throw runtime_error("Projection index build failed");
+                }
+
+                Relation projected = combined.project(indices);
+                Relation renamed = projected.rename(database.getRelation(rule.getHead().getName()).getScheme().getNames());
+
+                Relation& target = database.getRelation(rule.getHead().getName());
+
+                vector<Tuple> newTuples;
+                for (const Tuple& t : renamed.getTuples())
+                    if (!target.contains(t)) newTuples.push_back(t);
+
+                bool added = target.unionWith(renamed);
+                if (added) {
+                    changed = true;
+                    for (const Tuple& t : newTuples)
+                        cout << "  " << t.toString(target.getScheme()) << endl;
+                }
+            }
+        } while (changed && (!isTrivial || selfLoop));
+
+        cout << passes << " passes: ";
+        vector<int> sortedScc = scc;
+        sort(sortedScc.begin(), sortedScc.end());
+        for (size_t i = 0; i < sortedScc.size(); ++i) {
+            cout << "R" << sortedScc[i];
+            if (i != sortedScc.size() - 1) cout << ",";
+        }
+        cout << endl;
+    }
+}
+
+    Graph makeGraph(const vector<Rule>& rules) {
+        int n = (int)rules.size();
+        Graph graph(n);
+
+        for (int fromID = 0; fromID < n; ++fromID) {
+            const Rule& fromRule = rules[fromID];
+            for (const Predicate& bodyPred : fromRule.getBody()) {
+                for (int toID = 0; toID < n; ++toID) {
+                    const Rule& toRule = rules[toID];
+                    if (bodyPred.getName() == toRule.getHead().getName()) {
+                        graph.addEdge(fromID, toID);
+                    }
+                }
+            }
+        }
+        return graph;
+    }
 };

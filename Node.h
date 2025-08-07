@@ -1,31 +1,29 @@
 #pragma once
-#include "DatalogProgram.h"
-#include "Database.h"
+#include <set>
+#include <string>
+
+#include <sstream>
 using namespace std;
 
 class Node {
+private:
+    set<int> adjacentNodeIDs;
 
- private:
-
-  set<int> adjacentNodeIDs;
-
- public:
-
-  void addEdge(int adjacentNodeID) {
-    adjacentNodeIDs.insert(adjacentNodeID);
-  }
-
-  std::string toString() const {
-    std::ostringstream out;
-    bool first = true;
-    for (int id : adjacentNodeIDs) {
-      if (!first) {
-        out << ",";
-      }
-      out << "R" << id;
-      first = false;
+public:
+    void addEdge(int id) {
+        adjacentNodeIDs.insert(id);
     }
-    return out.str();
-  }
-
+    const set<int>& getAdjacent() const {
+        return adjacentNodeIDs;
+    }
+    string toString() const {
+        ostringstream out;
+        bool first = true;
+        for (int id : adjacentNodeIDs) {
+            if (!first) out << ",";
+            out << "R" << id;
+            first = false;
+        }
+        return out.str();
+    }
 };

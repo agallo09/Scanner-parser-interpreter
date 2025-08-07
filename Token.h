@@ -64,6 +64,7 @@ class Token{
                 return "END";
                 break;
             default:
+                return "UNKNOWN";
                 break;
         }
   }
